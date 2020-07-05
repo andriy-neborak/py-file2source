@@ -2,6 +2,7 @@
 Python script for converting any file to C/C++-style array source code file.
 
 For example, for device firmware is required binary image that will store inside finally hex file. 
+
 And file index.html
 ```html
 <html>
@@ -32,7 +33,7 @@ const uint8_t index_html[] = {
 Python >=3.6
 
 ## How to use
-NOTE: Linux users should add executable permission to python script before using.
+**NOTE:** Linux users should add executable permission to python script before using.
 
 ```Bash
 chmod +x file2array.py
@@ -42,13 +43,15 @@ chmod +x file2array.py
 
 `file2array.py -f input_file_name -a -o output_file_name -t "const uint8_t" -offset 44`
 
-`-f input_file_name` - specifies file names will convert
+`-f input_file_name` - specifies file name will convert
 
 `-o output_file_name` - specifies output file name
 
 `-a` - data will be appended to the output file
 
-`-t "const uint8_t"` - specifies arrays data type (same type for each input file), by default, type is `const unisgned char`. Note: Use quotes if data type consist of several words.
+`-t "const uint8_t"` - specifies arrays data type (same type for each input file), by default, type is `const unsigned char`. 
+
+**Note:** Use quotes if data type consist of several words.
 
 `-offset 44` - specifies input file data offset in input file, e.g.: raw data in the wav file starts from 44'th byte. Use integer or hex value.  
 
@@ -86,6 +89,18 @@ Windows
 ```bash
 py file2array.py -f index.html -o index.h -t "const uint8_t"
 py file2array.py -f dorbell.wav -o dorbell.h -t "const uint8_t" -offset 44
+```
+
+#### Including to source code
+```c
+#include "index.h"      // include insert index_html array source code to this place
+#include "dorbell.h"    // include insert dorbell_wav array source code to this place
+
+...
+memcpy(buf, index_h, 100);
+...
+set_pwm_value(dorbell_h[i++]);
+...
 ```
 
 ### Limitations
