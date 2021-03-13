@@ -4,24 +4,26 @@ import os
 import sys
 import argparse
 
-def bytes2string(line, elem_per_line=8):
+def bytes2string(data, elem_per_line=8):
     """
     converts bytes to formated c-style code
     """
-    text = ""
+    text = str()
+    lines_list = list()
 
-    for i, byte in enumerate(line):
-        # 4 spaces indention for a new line
-        if (i % elem_per_line) == 0:
-            text += " " * 4 
-
-        text += "0x{0:02x}, ".format(byte)
-
-        # end of line 
-        if ((i+1) % elem_per_line) == 0 and i != 0:
-            text += "\r\n"
+    for r in range(0, len(data), elem_per_line):
+        line = " " * 4
+        line += ", ".join(map("0x{0:02x}".format, data[r:r + elem_per_line]))
+        lines_list.append(line)
+    
+    text = ",\n".join(lines_list)
 
     return text
+
+
+def get_array_name(filename):
+    name = os.path.basename(filename)
+    return name.replace(".", "_")
 
 
 if __name__ == "__main__":
@@ -36,18 +38,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # -a key
-    try:
-        mode = "a" if args.a else "w"
-        out_file = open(args.o, mode)    
-    except OSError:
-        print(f"Error to open or create file {args.o}")
-        sys.exit(1)
-
+    mode = "a" if args.a else "w"
     # -t key
-    if args.t:
-        data_type = args.t 
-    else:
-        data_type = "const unsigned char"
+    data_type = args.t or "const unsigned char"
 
     # -offset key
     if args.offset:
@@ -60,27 +53,33 @@ if __name__ == "__main__":
         offset = 0
 
     for filename in [args.f]:
-        file = open(filename, 'rb')
-        file.seek(offset)
+        file_content = None
+        try:
+            with open(filename, 'rb') as file:
+                file.seek(offset)
+                file_content = file.read()
+        except FileNotFoundError:
+            print(f"File {filename} not found")
+            continue
+        except Exception as e:
+            print(f"{e}")
+            continue
 
-        array_name = os.path.basename(filename)
-        array_name = array_name.replace(".", "_")
+        try:
+            with open(args.o, mode) as out_file:
+                array_name = get_array_name(filename)
 
-        header = f"// File: {filename} \r\n"
-        header += f"{data_type} {array_name}[] = "
-        header += "{\r\n"
+                header = list()
+                header.append(f'// File: {filename}')
+                header.append(f'{data_type} {array_name}[] = {{')
 
-        out_file.write(header)
-        out_file.write(bytes2string(line=file.read()))
-        out_file.write("\r\n};\r\n\r\n")
-                    
-        file.close()
+                out_file.write("\n".join(header) + "\n")
+                out_file.write(bytes2string(file_content))
 
-    out_file.close()
+                out_file.write("\n};")
 
-    
-    
+        except OSError:
+            print(f"Error to open or create file {args.o}")
+            sys.exit(1)
 
-
-    
-    
+    sys.exit(0)
