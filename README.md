@@ -49,7 +49,9 @@ chmod +x file2array.py
 
 `-a` - data will be appended to the output file
 
-`-t "const uint8_t"` - specifies arrays data type (same type for each input file), by default, type is `const unsigned char`. 
+`-t "const uint8_t"` - specifies arrays data type (same type for each input file), by default, type is `const unsigned char`
+
+`-ds` - array size macros will be added. 
 
 **Note:** Use quotes if data type consist of several words.
 
